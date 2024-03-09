@@ -1,5 +1,5 @@
 //! Contains functionality for constructing and playing a Tic-Tac-Toe game
-//! //! ## Examples
+//! ## Examples
 //!
 //! ```
 //! use tic_tac_toe::game;
