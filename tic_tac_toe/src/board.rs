@@ -1,5 +1,7 @@
 //! Contains functionality for manipulating a Tic-Tac-Toe board
 
+use std::fmt;
+
 /// Represents a Tic-Tac-Toe Cell
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Cell {
@@ -53,6 +55,31 @@ impl Board {
             .get(row_index)
             .and_then(|r| r.get(col_index).copied())
             .ok_or("Board index out of bound.")
+    }
+}
+
+impl fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row_index in 0..=2 {
+            for col_index in 0..=2 {
+                let symbol = match self.cells[row_index][col_index] {
+                    Cell::X => "X",
+                    Cell::O => "O",
+                    Cell::Empty => " ",
+                };
+
+                if col_index < 2 {
+                    write!(f, " {} |", symbol)?;
+                } else {
+                    write!(f, " {} ", symbol)?;
+                }
+            }
+
+            if row_index < 2 {
+                writeln!(f, "\n-----------")?;
+            }
+        }
+        Ok(())
     }
 }
 

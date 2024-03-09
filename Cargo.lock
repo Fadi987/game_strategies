@@ -3,6 +3,13 @@
 version = 3
 
 [[package]]
+name = "cli"
+version = "0.1.0"
+dependencies = [
+ "tic_tac_toe",
+]
+
+[[package]]
 name = "mcts"
 version = "0.1.0"
 dependencies = [
