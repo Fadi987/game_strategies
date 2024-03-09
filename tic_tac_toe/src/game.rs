@@ -22,7 +22,7 @@ pub enum GameTurn {
 /// Represents the state of the game
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameState {
-    OnGoing,
+    Ongoing,
     XWon,
     OWon,
     Tie,
@@ -31,7 +31,7 @@ pub enum GameState {
 /// Represents the game objects. Interally, it keeps track of:
 /// - the current board state
 /// - the turn of the current player
-/// - the state of the game (i.e, ongoing, X won, O won, tie)
+/// - the state of the game (i.e, Ongoing, X won, O won, tie)
 pub struct Game {
     board: board::Board,
     turn: GameTurn,
@@ -44,7 +44,7 @@ impl Game {
         Game {
             board: board::Board::new(),
             turn: GameTurn::TurnX,
-            state: GameState::OnGoing,
+            state: GameState::Ongoing,
         }
     }
 
@@ -52,10 +52,10 @@ impl Game {
     /// Returns an `Err` if:
     /// - location is out-of-bounds, or
     /// - cell played is non-empty, or
-    /// - game is terminated (not `OnGoing`)
+    /// - game is terminated (not `Ongoing`)
     pub fn play(&mut self, row_index: usize, col_index: usize) -> Result<(), &'static str> {
         match self.state {
-            GameState::OnGoing => match self.turn {
+            GameState::Ongoing => match self.turn {
                 GameTurn::TurnX => {
                     self.board.mark(board::Cell::X, row_index, col_index)?;
                     self.update_state();
@@ -94,7 +94,7 @@ impl Game {
     }
 
     fn update_state(&mut self) {
-        if self.state != GameState::OnGoing {
+        if self.state != GameState::Ongoing {
             panic!("Cannot update state when game is terminated!")
         }
 
@@ -137,7 +137,7 @@ impl Game {
 impl fmt::Display for Game {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let game_state = match self.state {
-            GameState::OnGoing => "Ongoing",
+            GameState::Ongoing => "Ongoing",
             GameState::XWon => "X Won",
             GameState::OWon => "O Won",
             GameState::Tie => "Tie",
@@ -162,7 +162,7 @@ mod tests {
     fn test_initialize_game() {
         let game = Game::new();
         assert_eq!(game.board, board::Board::new());
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
         assert_eq!(game.turn, GameTurn::TurnX);
     }
 
@@ -175,11 +175,11 @@ mod tests {
     }
 
     #[test]
-    fn test_state_ongoing() {
+    fn test_state_Ongoing() {
         let mut game = Game::new();
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
         game.play(0, 0).unwrap();
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
     }
 
     #[test]
@@ -193,7 +193,7 @@ mod tests {
         game.play(0, 1).unwrap();
         // O at (1, 1)
         game.play(1, 1).unwrap();
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
 
         // X at (0, 2) -> X won
         game.play(0, 2).unwrap();
@@ -213,7 +213,7 @@ mod tests {
         game.play(1, 1).unwrap();
         // X at (1, 0)
         game.play(1, 0).unwrap();
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
 
         // O at (2, 1) -> O won
         game.play(2, 1).unwrap();
@@ -231,7 +231,7 @@ mod tests {
         game.play(1, 1).unwrap();
         // O at (0, 2)
         game.play(0, 2).unwrap();
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
 
         // X at (2, 2) -> X Won
         game.play(2, 2).unwrap();
@@ -249,7 +249,7 @@ mod tests {
         game.play(1, 1).unwrap();
         // O at (0, 1)
         game.play(0, 1).unwrap();
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
 
         // X at (2, 0) -> X Won
         game.play(2, 0).unwrap();
@@ -275,7 +275,7 @@ mod tests {
         game.play(0, 1).unwrap();
         // O at (0, 2)
         game.play(0, 2).unwrap();
-        assert_eq!(game.state, GameState::OnGoing);
+        assert_eq!(game.state, GameState::Ongoing);
 
         // X at (0, 0)
         game.play(0, 0).unwrap();
