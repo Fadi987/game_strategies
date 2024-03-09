@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "tic_tac_toe",
+    "mcts"
+]
