@@ -10,6 +10,7 @@
 //! ```
 
 use crate::board;
+use std::fmt;
 
 /// Represents the turn of the current player
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -130,6 +131,26 @@ impl Game {
         if !found_empty {
             self.state = GameState::Tie;
         }
+    }
+}
+
+impl fmt::Display for Game {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let game_state = match self.state {
+            GameState::OnGoing => "Ongoing",
+            GameState::XWon => "X Won",
+            GameState::OWon => "O Won",
+            GameState::Tie => "Tie",
+        };
+
+        let game_turn = match self.turn {
+            GameTurn::TurnX => "X",
+            GameTurn::TurnO => "O",
+        };
+
+        writeln!(f, "Game State: {}, Player Turn: {}", game_state, game_turn)?;
+        writeln!(f, "\n\n{}", self.board)?;
+        Ok(())
     }
 }
 

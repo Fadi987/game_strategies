@@ -1,6 +1,6 @@
-use tic_tac_toe::board;
+use tic_tac_toe::game;
 
 fn main() {
-    let board = board::Board::new();
-    println!("{}", board);
+    let game = game::Game::new();
+    println!("{}", game);
 }
