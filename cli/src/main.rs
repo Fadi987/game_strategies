@@ -3,7 +3,7 @@ use std::io::Write;
 use tic_tac_toe::board;
 use tic_tac_toe::game;
 
-fn parse_input(input: &String) -> Result<(usize, usize), (&'static str)> {
+fn parse_input(input: &String) -> Result<(usize, usize), &'static str> {
     let parts: Vec<&str> = input.split(',').collect();
 
     if parts.len() != 2 {
