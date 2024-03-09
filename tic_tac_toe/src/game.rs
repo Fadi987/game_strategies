@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[test]
-    fn test_state_Ongoing() {
+    fn test_state_ongoing() {
         let mut game = Game::new();
         assert_eq!(game.state, GameState::Ongoing);
         game.play(0, 0).unwrap();
