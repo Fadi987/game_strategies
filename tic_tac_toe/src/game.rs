@@ -91,6 +91,11 @@ impl Game {
         self.state
     }
 
+    /// Gets the turn of the current player
+    pub fn get_turn(&self) -> GameTurn {
+        self.turn
+    }
+
     fn check_win(&self, path: [(usize, usize); 3]) -> (u32, u32) {
         let mut x_streak = 0;
         let mut o_streak = 0;
@@ -107,7 +112,7 @@ impl Game {
     }
 
     fn update_state(&mut self) {
-        if self.state != GameState::Ongoing {
+        if self.is_over() {
             panic!("Cannot update state when game is terminated!")
         }
 
@@ -143,6 +148,14 @@ impl Game {
 
         if !found_empty {
             self.state = GameState::Tie;
+        }
+    }
+
+    /// Returns a boolean indicating whether the game is over
+    pub fn is_over(&self) -> bool {
+        match self.state {
+            GameState::Ongoing => false,
+            _ => true,
         }
     }
 }
