@@ -38,6 +38,13 @@ pub struct Game {
     state: GameState,
 }
 
+/// Represents the possible reasons when failing to mark a board cell
+#[derive(Debug, PartialEq, Eq)]
+pub enum GamePlayError {
+    MarkError(board::BoardMarkError),
+    GameIsOver,
+}
+
 impl Game {
     /// Initializes a new `Game` object
     pub fn new() -> Self {
@@ -53,23 +60,29 @@ impl Game {
     /// - location is out-of-bounds, or
     /// - cell played is non-empty, or
     /// - game is terminated (not `Ongoing`)
-    pub fn play(&mut self, row_index: usize, col_index: usize) -> Result<(), &'static str> {
+    pub fn play(&mut self, row_index: usize, col_index: usize) -> Result<(), GamePlayError> {
         match self.state {
             GameState::Ongoing => match self.turn {
                 GameTurn::TurnX => {
-                    self.board.mark(board::Cell::X, row_index, col_index)?;
+                    if let Err(e) = self.board.mark(board::Cell::X, row_index, col_index) {
+                        return Err(GamePlayError::MarkError(e));
+                    }
+
                     self.update_state();
                     self.turn = GameTurn::TurnO;
                     Ok(())
                 }
                 GameTurn::TurnO => {
-                    self.board.mark(board::Cell::O, row_index, col_index)?;
+                    if let Err(e) = self.board.mark(board::Cell::O, row_index, col_index) {
+                        return Err(GamePlayError::MarkError(e));
+                    }
+
                     self.update_state();
                     self.turn = GameTurn::TurnX;
                     Ok(())
                 }
             },
-            _ => Err("Cannot play a terminated game."),
+            _ => Err(GamePlayError::GameIsOver),
         }
     }
 
@@ -280,5 +293,55 @@ mod tests {
         // X at (0, 0)
         game.play(0, 0).unwrap();
         assert_eq!(game.state, GameState::Tie);
+    }
+
+    #[test]
+    fn test_out_of_bound() {
+        let mut game = Game::new();
+        assert_eq!(
+            game.play(3, 0),
+            Err(GamePlayError::MarkError(board::BoardMarkError::OutOfBound))
+        );
+
+        // Ensure that state/turn states don't change after an invalid move
+        assert_eq!(game.state, GameState::Ongoing);
+        assert_eq!(game.turn, GameTurn::TurnX);
+    }
+
+    #[test]
+    fn test_mark_twice() {
+        let mut game = Game::new();
+        game.play(2, 0).unwrap();
+        assert_eq!(
+            game.play(2, 0),
+            Err(GamePlayError::MarkError(
+                board::BoardMarkError::NonEmptyCell
+            ))
+        );
+
+        // Ensure that state/turn states don't change after an invalid move
+        assert_eq!(game.state, GameState::Ongoing);
+        assert_eq!(game.turn, GameTurn::TurnO);
+    }
+
+    #[test]
+    fn test_play_game_over() {
+        let mut game = Game::new();
+        // X at (0, 0)
+        game.play(0, 0).unwrap();
+        // O at (1, 0)
+        game.play(1, 0).unwrap();
+        // X at (0, 1)
+        game.play(0, 1).unwrap();
+        // O at (1, 1)
+        game.play(1, 1).unwrap();
+        // X at (0, 2) -> X won
+        game.play(0, 2).unwrap();
+
+        // Playing an empty cell is invalid after game is over
+        assert_eq!(game.play(2, 0), Err(GamePlayError::GameIsOver));
+
+        // Ensure that state states don't change after an invalid move
+        assert_eq!(game.state, GameState::XWon);
     }
 }

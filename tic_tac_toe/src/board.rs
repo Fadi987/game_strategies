@@ -16,6 +16,13 @@ pub struct Board {
     cells: [[Cell; 3]; 3],
 }
 
+/// Represents the possible reasons when failing to mark a board cell
+#[derive(Debug, PartialEq, Eq)]
+pub enum BoardMarkError {
+    NonEmptyCell,
+    OutOfBound,
+}
+
 impl Board {
     /// Constructs a new Tic-Tac-Toe `Board`
     pub fn new() -> Self {
@@ -32,7 +39,7 @@ impl Board {
         mark: Cell,
         row_index: usize,
         col_index: usize,
-    ) -> Result<(), &'static str> {
+    ) -> Result<(), BoardMarkError> {
         match self
             .cells
             .get_mut(row_index)
@@ -43,9 +50,9 @@ impl Board {
                     *cell = mark;
                     Ok(())
                 }
-                _ => Err("Cannot mark a non-empty cell."),
+                _ => Err(BoardMarkError::NonEmptyCell),
             },
-            None => Err("Index out-of-bound."),
+            None => Err(BoardMarkError::OutOfBound),
         }
     }
 
@@ -108,7 +115,7 @@ mod tests {
     fn test_mark_board_fails_oob() {
         let mut b = Board::new();
         let result = b.mark(Cell::X, 5, 1);
-        assert_eq!(result, Err("Index out-of-bound."));
+        assert_eq!(result, Err(BoardMarkError::OutOfBound));
     }
 
     #[test]
@@ -116,6 +123,6 @@ mod tests {
         let mut b = Board::new();
         b.mark(Cell::X, 0, 0).unwrap();
         let result = b.mark(Cell::O, 0, 0);
-        assert_eq!(result, Err("Cannot mark a non-empty cell."));
+        assert_eq!(result, Err(BoardMarkError::NonEmptyCell));
     }
 }
