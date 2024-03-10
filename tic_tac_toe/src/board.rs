@@ -3,7 +3,7 @@
 use std::fmt;
 
 /// Represents a Tic-Tac-Toe Cell
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Cell {
     X,
     O,
@@ -11,7 +11,7 @@ pub enum Cell {
 }
 
 /// Represents a 3x3 Tic-Tac-Toe board
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Board {
     cells: [[Cell; 3]; 3],
 }

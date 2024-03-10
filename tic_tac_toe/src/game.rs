@@ -13,14 +13,14 @@ use crate::board;
 use std::fmt;
 
 /// Represents the turn of the current player
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameTurn {
     TurnX,
     TurnO,
 }
 
 /// Represents the state of the game
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameState {
     Ongoing,
     XWon,
@@ -33,7 +33,7 @@ pub enum GameState {
 /// - the turn of the current player
 /// - the state of the game (i.e, Ongoing, X won, O won, tie)
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Game {
     board: board::Board,
     turn: GameTurn,
