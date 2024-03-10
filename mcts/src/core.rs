@@ -1,7 +1,6 @@
-//! //! Contains functionality for core MCTS (Monte Carlo Tree Search)
+//! Contains functionality for core MCTS (Monte Carlo Tree Search)
 
 use std::cell::RefCell;
-use std::collections::HashSet;
 use std::rc;
 use tic_tac_toe::game;
 
@@ -101,7 +100,8 @@ mod tests {
             assert_eq!(node.game_state.get_turn(), game::GameTurn::TurnO);
         }
 
-        let child_set: HashSet<game::Game> = (*root)
+        use std::collections;
+        let child_set: collections::HashSet<game::Game> = (*root)
             .borrow()
             .children
             .iter()
