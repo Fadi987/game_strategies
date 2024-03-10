@@ -158,6 +158,21 @@ impl Game {
             _ => true,
         }
     }
+
+    // Returns a vector of possible move as (row_index, col_index).
+    // List of moves is always ordered upper left -> bottom right
+    pub fn get_possible_plays(&self) -> Vec<(usize, usize)> {
+        if self.is_over() {
+            return Vec::new();
+        }
+
+        (0..=2)
+            .flat_map(|row_index| (0..=2).map(move |col_index| (row_index, col_index)))
+            .filter(|&(row_index, col_index)| {
+                self.board.get_cell(row_index, col_index).unwrap() == board::Cell::Empty
+            })
+            .collect()
+    }
 }
 
 impl fmt::Display for Game {
@@ -356,5 +371,22 @@ mod tests {
 
         // Ensure that state states don't change after an invalid move
         assert_eq!(game.state, GameState::XWon);
+    }
+
+    #[test]
+    fn test_possible_plays() {
+        let mut game = Game::new();
+
+        let possible_plays: Vec<(usize, usize)> = (0..=2)
+            .flat_map(|row_index| (0..=2).map(move |col_index| (row_index, col_index)))
+            .collect();
+
+        assert_eq!(possible_plays, game.get_possible_plays());
+
+        game.play(0, 0).unwrap();
+        assert_eq!(&possible_plays[1..], game.get_possible_plays());
+
+        game.play(2, 2).unwrap();
+        assert_eq!(&possible_plays[1..=7], game.get_possible_plays());
     }
 }
