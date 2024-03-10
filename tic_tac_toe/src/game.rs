@@ -32,6 +32,8 @@ pub enum GameState {
 /// - the current board state
 /// - the turn of the current player
 /// - the state of the game (i.e, Ongoing, X won, O won, tie)
+
+#[derive(Clone)]
 pub struct Game {
     board: board::Board,
     turn: GameTurn,
@@ -84,6 +86,13 @@ impl Game {
             },
             _ => Err(GamePlayError::GameIsOver),
         }
+    }
+
+    /// Returns a copy of the game state after the move (row_index, col_index) has been played
+    pub fn get_played(&self, row_index: usize, col_index: usize) -> Result<Self, GamePlayError> {
+        let mut cloned_game = (*self).clone();
+        cloned_game.play(row_index, col_index)?;
+        Ok(cloned_game)
     }
 
     /// Gets the current state of the game
@@ -388,5 +397,24 @@ mod tests {
 
         game.play(2, 2).unwrap();
         assert_eq!(&possible_plays[1..=7], game.get_possible_plays());
+    }
+
+    #[test]
+    fn test_get_played() {
+        let mut game = Game::new();
+        // X at (0, 0)
+        game.play(0, 0).unwrap();
+        // O at (1, 0)
+        game.play(1, 0).unwrap();
+        // X at (0, 1)
+        game.play(0, 1).unwrap();
+        // O at (1, 1)
+        game.play(1, 1).unwrap();
+        // X at (0, 2) -> X won (in clone only)
+        let game_clone = game.get_played(0, 2).unwrap();
+
+        // Original game state is unchanged, only clone
+        assert_eq!(game.state, GameState::Ongoing);
+        assert_eq!(game_clone.state, GameState::XWon);
     }
 }

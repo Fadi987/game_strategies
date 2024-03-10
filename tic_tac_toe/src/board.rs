@@ -11,7 +11,7 @@ pub enum Cell {
 }
 
 /// Represents a 3x3 Tic-Tac-Toe board
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
     cells: [[Cell; 3]; 3],
 }
