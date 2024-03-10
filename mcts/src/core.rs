@@ -107,7 +107,7 @@ mod tests {
             .map(|node| node.game_state.clone())
             .collect();
 
-        // Make sure the child game states are unique/different (the boards in this case)
+        // Make sure the child game states (the boards in this case) are unique/different
         assert_eq!(child_set.len(), 9);
     }
 }
