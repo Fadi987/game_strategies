@@ -31,12 +31,7 @@ impl MCTS {
         }))
     }
 
-    /// Creates a root MCTS node:
-    /// - newly initialized game state
-    /// - 0 wins
-    /// - 0 visits
-    /// - no parent
-    /// - no children
+    /// Adds a child MCTS node to parent with game state `game_state`
     fn add_child_with_state(parent: rc::Rc<RefCell<MCTS>>, game_state: game::Game) {
         let child = MCTS {
             game_state,
