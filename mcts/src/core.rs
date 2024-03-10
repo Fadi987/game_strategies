@@ -52,7 +52,13 @@ impl MCTS {
     // Navigate from the current node until a leaf node is reaced based on UCT (Upper Confidence Bound for Trees) policy
     // fn select_node(&self) -> &Self {}
 
+    /// Starting from current MCTS node, adds children corresponding to all possible next moves
+    /// If game is already over, it is a no-op
     fn expand_node(node: rc::Rc<RefCell<MCTS>>) {
+        if (*node).borrow().children.len() > 0 {
+            panic!("Cannot expand a non-leaf node!");
+        }
+
         let child_games: Vec<game::Game> = (*node)
             .borrow()
             .game_state
