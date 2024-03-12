@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 tic_tac_toe = { path = "../tic_tac_toe" }
+rand = "0.8.5"
 
