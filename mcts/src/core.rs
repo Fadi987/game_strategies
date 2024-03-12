@@ -1,6 +1,7 @@
 //! Contains functionality for core MCTS (Monte Carlo Tree Search)
 
-use rand::Rng;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use std::cell::RefCell;
 use std::{clone, rc};
 use tic_tac_toe::game;
@@ -73,6 +74,7 @@ impl MCTS {
         }
     }
 
+    /// Simulate a random play starting from game state in `node` until game is over
     fn simulate_playout(node: rc::Rc<RefCell<MCTS>>) -> game::GameState {
         let mut cloned_game = (*node).borrow().game_state.clone();
         let mut rng = rand::thread_rng();
@@ -88,8 +90,6 @@ impl MCTS {
 
         cloned_game.get_state()
     }
-
-    // fn simulate_playout(&self) -> game::GameState {}
 
     // fn back_propagate(node: &MCTS, game_result: game::GameState) -> {}
 }
