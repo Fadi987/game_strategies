@@ -1,9 +1,8 @@
 //! Contains functionality for core MCTS (Monte Carlo Tree Search)
 
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::Rng;
 use std::cell::RefCell;
-use std::{clone, rc};
+use std::rc;
 use tic_tac_toe::game;
 
 /// Represents a node in the Monte Carlo tree. Includes
@@ -15,7 +14,7 @@ use tic_tac_toe::game;
 struct MCTS {
     game_state: game::Game,
     parent: Option<rc::Weak<RefCell<MCTS>>>,
-    children: Vec<MCTS>,
+    children: Vec<rc::Rc<RefCell<MCTS>>>,
     wins: u32,
     visits: u32,
 }
@@ -34,19 +33,46 @@ impl MCTS {
 
     /// Adds a child MCTS node to parent with game state `game_state`
     fn add_child_with_state(parent: rc::Rc<RefCell<MCTS>>, game_state: game::Game) {
-        let child = MCTS {
+        let child = rc::Rc::new(RefCell::new(MCTS {
             game_state,
             wins: 0,
             visits: 0,
             children: Vec::new(),
             parent: Some(rc::Rc::downgrade(&parent)),
-        };
+        }));
 
         (*parent).borrow_mut().children.push(child);
     }
 
+    fn uct(parent_visits: f64, child_wins: f64, child_visits: f64) -> f64 {
+        let win_rate = child_wins / child_visits;
+
+        win_rate + (2.0 as f64).sqrt() * (parent_visits.ln() / child_visits).sqrt()
+    }
+
     // Navigate from the current node until a leaf node is reaced based on UCT (Upper Confidence Bound for Trees) policy
-    // fn select_node(&self) -> &Self {}
+    fn select_node(node: rc::Rc<RefCell<MCTS>>) -> rc::Rc<RefCell<MCTS>> {
+        let mut max_uct_child: Option<rc::Rc<RefCell<MCTS>>> = None;
+        let mut max_uct = 0.0;
+
+        for child in (*node).borrow().children.iter() {
+            let uct = MCTS::uct(
+                (*node).borrow().visits as f64,
+                (**child).borrow().wins as f64,
+                (**child).borrow().visits as f64,
+            );
+
+            if uct > max_uct {
+                max_uct = uct;
+                max_uct_child = Some(rc::Rc::clone(child));
+            }
+        }
+
+        match max_uct_child {
+            Some(child) => MCTS::select_node(child),
+            None => node,
+        }
+    }
 
     /// Starting from current MCTS node, adds children corresponding to all possible next moves
     /// If game is already over, it is a no-op
@@ -108,13 +134,19 @@ mod tests {
 
         for node in (*root).borrow().children.iter() {
             // Assert move has been made
-            assert_eq!(node.game_state.get_possible_plays().len(), 8);
+            assert_eq!((**node).borrow().game_state.get_possible_plays().len(), 8);
 
             // Assert game is not over (Tic-Tac-Toe cannot end in one move)
-            assert_eq!(node.game_state.get_state(), game::GameState::Ongoing);
+            assert_eq!(
+                (**node).borrow().game_state.get_state(),
+                game::GameState::Ongoing
+            );
 
             // Assert turn has been switched
-            assert_eq!(node.game_state.get_turn(), game::GameTurn::TurnO);
+            assert_eq!(
+                (**node).borrow().game_state.get_turn(),
+                game::GameTurn::TurnO
+            );
         }
 
         use std::collections;
@@ -122,7 +154,7 @@ mod tests {
             .borrow()
             .children
             .iter()
-            .map(|node| node.game_state.clone())
+            .map(|node| (**node).borrow().game_state.clone())
             .collect();
 
         // Make sure the child game states (the boards in this case) are unique/different
