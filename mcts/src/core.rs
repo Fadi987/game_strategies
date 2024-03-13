@@ -15,8 +15,8 @@ struct MCTS {
     game_state: game::Game,
     parent: Option<rc::Weak<RefCell<MCTS>>>,
     children: Vec<rc::Rc<RefCell<MCTS>>>,
-    wins: u32,
-    visits: u32,
+    wins: f64,
+    visits: f64,
 }
 
 impl MCTS {
@@ -26,22 +26,9 @@ impl MCTS {
             game_state: game::Game::new(),
             parent: None,
             children: Vec::new(),
-            wins: 0,
-            visits: 0,
+            wins: 0.0,
+            visits: 0.0,
         }))
-    }
-
-    /// Adds a child MCTS node to parent with game state `game_state`
-    fn add_child_with_state(parent: rc::Rc<RefCell<MCTS>>, game_state: game::Game) {
-        let child = rc::Rc::new(RefCell::new(MCTS {
-            game_state,
-            wins: 0,
-            visits: 0,
-            children: Vec::new(),
-            parent: Some(rc::Rc::downgrade(&parent)),
-        }));
-
-        (*parent).borrow_mut().children.push(child);
     }
 
     /// Compute UCT (Upper Confidence Bound for Trees) score
@@ -59,9 +46,9 @@ impl MCTS {
 
         for child in (*node).borrow().children.iter() {
             let uct = MCTS::uct(
-                (*node).borrow().visits as f64,
-                (**child).borrow().wins as f64,
-                (**child).borrow().visits as f64,
+                (*node).borrow().visits,
+                (**child).borrow().wins,
+                (**child).borrow().visits,
             );
 
             if uct > max_uct {
@@ -74,6 +61,19 @@ impl MCTS {
             Some(child) => MCTS::select_node(child),
             None => node,
         }
+    }
+
+    /// Adds a child MCTS node to parent with game state `game_state`
+    fn add_child_with_state(parent: rc::Rc<RefCell<MCTS>>, game_state: game::Game) {
+        let child = rc::Rc::new(RefCell::new(MCTS {
+            game_state,
+            wins: 0.0,
+            visits: 0.0,
+            children: Vec::new(),
+            parent: Some(rc::Rc::downgrade(&parent)),
+        }));
+
+        (*parent).borrow_mut().children.push(child);
     }
 
     /// Starting from current MCTS node, adds children corresponding to all possible next moves
@@ -119,7 +119,49 @@ impl MCTS {
         cloned_game.get_state()
     }
 
-    // fn back_propagate(node: &MCTS, game_result: game::GameState) -> {}
+    // Starting form leaf node, refresh the state of wins/vists up the tree until root node is reached
+    fn back_propagate(node: rc::Rc<RefCell<MCTS>>, game_result: game::GameState) {
+        let node_player = (*node).borrow().game_state.get_turn();
+
+        match game_result {
+            game::GameState::XWon => match node_player {
+                game::GameTurn::TurnX => {
+                    (*node).borrow_mut().visits += 1.0;
+                }
+                game::GameTurn::TurnO => {
+                    (*node).borrow_mut().visits += 1.0;
+                    (*node).borrow_mut().wins += 1.0;
+                }
+            },
+            game::GameState::OWon => match node_player {
+                game::GameTurn::TurnX => {
+                    (*node).borrow_mut().visits += 1.0;
+                    (*node).borrow_mut().wins += 1.0;
+                }
+                game::GameTurn::TurnO => {
+                    (*node).borrow_mut().visits += 1.0;
+                }
+            },
+            game::GameState::Tie => match node_player {
+                game::GameTurn::TurnX => {
+                    (*node).borrow_mut().visits += 1.0;
+                    (*node).borrow_mut().wins += 0.5;
+                }
+                game::GameTurn::TurnO => {
+                    (*node).borrow_mut().visits += 1.0;
+                    (*node).borrow_mut().wins += 0.5;
+                }
+            },
+            _ => panic!("Cannot back propagate result other than XWon, OWon, Tie"),
+        }
+
+        match &(*node).borrow().parent {
+            Some(parent) => {
+                MCTS::back_propagate(rc::Rc::clone(&parent.upgrade().unwrap()), game_result)
+            }
+            None => {}
+        }
+    }
 }
 
 #[cfg(test)]
