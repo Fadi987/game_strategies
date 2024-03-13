@@ -206,6 +206,38 @@ mod tests {
     }
 
     #[test]
+    fn test_select_node() {
+        let root = MCTS::new();
+        let root_game = (*root).borrow().game_state.clone();
+
+        // X at (0, 0) added as a first possibility child
+        let game_1_after_move_1 = root_game.get_played(0, 0).unwrap();
+        MCTS::add_child_with_state(rc::Rc::clone(&root), game_1_after_move_1);
+
+        // X at (2, 2) added as a second possibility child
+        let game_2_after_move_1 = root_game.get_played(2, 2).unwrap();
+        MCTS::add_child_with_state(rc::Rc::clone(&root), game_2_after_move_1);
+
+        // At this point, we have a root node with two children at level 1
+
+        assert_eq!((*root).borrow().children.len(), 2);
+
+        // Pick a child arbitrarily
+        let a_child = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
+
+        // Backpropagate XWon from the chosen child. This should increase UCT score for that child
+        MCTS::backpropagate(rc::Rc::clone(&a_child), game::GameState::XWon);
+
+        let selected_child = MCTS::select_node(rc::Rc::clone(&root));
+
+        // Make sure we select the child with high UCT
+        assert_eq!(
+            (*selected_child).borrow().game_state == (*a_child).borrow().game_state,
+            true
+        );
+    }
+
+    #[test]
     fn test_backpropagate_xwon() {
         // Start with new game (empty board)
         let root = MCTS::new();
