@@ -44,9 +44,11 @@ impl MCTS {
         (*parent).borrow_mut().children.push(child);
     }
 
+    /// Compute UCT (Upper Confidence Bound for Trees) score
     fn uct(parent_visits: f64, child_wins: f64, child_visits: f64) -> f64 {
         let win_rate = child_wins / child_visits;
 
+        // TODO: think about the choice of the constant C for exploration/exploitation trade-off
         win_rate + (2.0 as f64).sqrt() * (parent_visits.ln() / child_visits).sqrt()
     }
 
