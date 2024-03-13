@@ -120,7 +120,7 @@ impl MCTS {
     }
 
     // Starting form leaf node, refresh the state of wins/vists up the tree until root node is reached
-    fn back_propagate(node: rc::Rc<RefCell<MCTS>>, game_result: game::GameState) {
+    fn backpropagate(node: rc::Rc<RefCell<MCTS>>, game_result: game::GameState) {
         let node_player = (*node).borrow().game_state.get_turn();
 
         match game_result {
@@ -157,7 +157,7 @@ impl MCTS {
 
         match &(*node).borrow().parent {
             Some(parent) => {
-                MCTS::back_propagate(rc::Rc::clone(&parent.upgrade().unwrap()), game_result)
+                MCTS::backpropagate(rc::Rc::clone(&parent.upgrade().unwrap()), game_result)
             }
             None => {}
         }
@@ -203,5 +203,120 @@ mod tests {
 
         // Make sure the child game states (the boards in this case) are unique/different
         assert_eq!(child_set.len(), 9);
+    }
+
+    #[test]
+    fn test_backpropagate_xwon() {
+        // Start with new game (empty board)
+        let root = MCTS::new();
+        let root_game = (*root).borrow().game_state.clone();
+
+        // X at (0, 0) added as a child
+        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
+        MCTS::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+
+        assert_eq!((*root).borrow().children.len(), 1);
+        let child = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
+
+        // Propagate state XWon up from child to parent
+        MCTS::backpropagate(rc::Rc::clone(&child), game::GameState::XWon);
+
+        // Make sure child increased both wins and vists
+        assert_eq!(((*child).borrow().wins - 1.0).abs() < 1e-7, true);
+        assert_eq!(((*child).borrow().visits - 1.0).abs() < 1e-7, true);
+
+        // Make sure parent only increased vists
+        assert_eq!(((*root).borrow().wins - 0.0).abs() < 1e-7, true);
+        assert_eq!(((*root).borrow().visits - 1.0).abs() < 1e-7, true);
+    }
+
+    #[test]
+    fn test_backpropagate_owon() {
+        // Start with new game (empty board)
+        let root = MCTS::new();
+        let root_game = (*root).borrow().game_state.clone();
+
+        // X at (0, 0) added as a child
+        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
+        MCTS::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+
+        assert_eq!((*root).borrow().children.len(), 1);
+        let child = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
+
+        // Propagate state OWn up from child to parent
+        MCTS::backpropagate(rc::Rc::clone(&child), game::GameState::OWon);
+
+        // Make sure child increased only increased vists
+        assert_eq!(((*child).borrow().wins - 0.0).abs() < 1e-7, true);
+        assert_eq!(((*child).borrow().visits - 1.0).abs() < 1e-7, true);
+
+        // Make sure parent increased both wins and vists
+        assert_eq!(((*root).borrow().wins - 1.0).abs() < 1e-7, true);
+        assert_eq!(((*root).borrow().visits - 1.0).abs() < 1e-7, true);
+    }
+
+    #[test]
+    fn test_backpropagate_tie() {
+        // Start with new game (empty board)
+        let root = MCTS::new();
+        let root_game = (*root).borrow().game_state.clone();
+
+        // X at (0, 0) added as a child
+        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
+        MCTS::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+
+        assert_eq!((*root).borrow().children.len(), 1);
+        let child = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
+
+        // Propagate state Tie up from child to parent
+        MCTS::backpropagate(rc::Rc::clone(&child), game::GameState::Tie);
+
+        // Make sure child increased vists by 1 and wins by 0.5
+        assert_eq!(((*child).borrow().wins - 0.5).abs() < 1e-7, true);
+        assert_eq!(((*child).borrow().visits - 1.0).abs() < 1e-7, true);
+
+        // Make sure parent increased vists by 1 and wins by 0.5
+        assert_eq!(((*root).borrow().wins - 0.5).abs() < 1e-7, true);
+        assert_eq!(((*root).borrow().visits - 1.0).abs() < 1e-7, true);
+    }
+
+    #[test]
+    fn test_backpropagate_2_levels() {
+        // Start with new game (empty board)
+        let root = MCTS::new();
+        let root_game = (*root).borrow().game_state.clone();
+
+        // X at (0, 0) added as a child
+        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
+        MCTS::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+
+        assert_eq!((*root).borrow().children.len(), 1);
+
+        let child_level_1 = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
+        let game_level_1 = (*child_level_1).borrow().game_state.clone();
+
+        // O at (1, 1) added as a child second level
+        let game_after_move_2 = game_level_1.get_played(1, 1).unwrap();
+        MCTS::add_child_with_state(rc::Rc::clone(&child_level_1), game_after_move_2);
+
+        assert_eq!((*child_level_1).borrow().children.len(), 1);
+
+        let child_level_2 =
+            rc::Rc::clone((*&child_level_1).borrow().children.iter().next().unwrap());
+
+        // Propagate state XWon two levels up the tree from child to parent
+        MCTS::backpropagate(rc::Rc::clone(&child_level_2), game::GameState::XWon);
+
+        // Make sure 2nd child increased only vists by 1
+        assert_eq!(((*child_level_2).borrow().wins - 0.0).abs() < 1e-7, true);
+        assert_eq!(((*child_level_2).borrow().visits - 1.0).abs() < 1e-7, true);
+
+        // Make sure 1st child increased both vists and wins by 1
+        assert_eq!(((*child_level_1).borrow().wins - 1.0).abs() < 1e-7, true);
+        assert_eq!(((*child_level_1).borrow().visits - 1.0).abs() < 1e-7, true);
+
+        // Make sure root increased only vists by 1
+        assert_eq!(((*root).borrow().wins - 0.0).abs() < 1e-7, true);
+        assert_eq!(((*root).borrow().visits - 1.0).abs() < 1e-7, true);
     }
 }
