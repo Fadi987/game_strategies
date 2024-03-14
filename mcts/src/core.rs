@@ -12,7 +12,6 @@ use tic_tac_toe::game;
 /// - game move played in parent state to reach current node (None if parent is None)
 /// - number of wins
 /// - number of visits
-
 struct MCTN {
     game: game::Game,
     parent: Option<rc::Weak<RefCell<MCTN>>>,
@@ -217,7 +216,6 @@ mod tests {
     #[test]
     fn test_select_node() {
         let root = MCTN::new(&game::Game::new());
-        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a first possibility child
         MCTN::play(rc::Rc::clone(&root), 0, 0);
@@ -248,7 +246,6 @@ mod tests {
     fn test_backpropagate_xwon() {
         // Start with new game (empty board)
         let root = MCTN::new(&game::Game::new());
-        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
         MCTN::play(rc::Rc::clone(&root), 0, 0);
@@ -272,10 +269,8 @@ mod tests {
     fn test_backpropagate_owon() {
         // Start with new game (empty board)
         let root = MCTN::new(&game::Game::new());
-        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
-        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
         MCTN::play(rc::Rc::clone(&root), 0, 0);
 
         assert_eq!((*root).borrow().children.len(), 1);
@@ -297,7 +292,6 @@ mod tests {
     fn test_backpropagate_tie() {
         // Start with new game (empty board)
         let root = MCTN::new(&game::Game::new());
-        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
         MCTN::play(rc::Rc::clone(&root), 0, 0);
@@ -321,7 +315,6 @@ mod tests {
     fn test_backpropagate_2_levels() {
         // Start with new game (empty board)
         let root = MCTN::new(&game::Game::new());
-        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
         MCTN::play(rc::Rc::clone(&root), 0, 0);
@@ -329,7 +322,6 @@ mod tests {
         assert_eq!((*root).borrow().children.len(), 1);
 
         let child_level_1 = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
-        let game_level_1 = (*child_level_1).borrow().game.clone();
 
         // O at (1, 1) added as a child second level
         MCTN::play(rc::Rc::clone(&child_level_1), 1, 1);
