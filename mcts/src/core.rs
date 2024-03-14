@@ -1,7 +1,8 @@
 //! Contains functionality for core MCTN (Monte Carlo Tree Search)
 
 use rand::Rng;
-use std::cell::RefCell;
+use std::borrow::Borrow;
+use std::cell::{Ref, RefCell};
 use std::rc;
 use tic_tac_toe::game;
 
@@ -42,7 +43,7 @@ impl MCTN {
         win_rate + (2.0 as f64).sqrt() * (parent_visits.ln() / child_visits).sqrt()
     }
 
-    // Navigate from the current node until a leaf node is reaced based on UCT (Upper Confidence Bound for Trees) policy
+    /// Navigate from the current node until a leaf node is reaced based on UCT (Upper Confidence Bound for Trees) policy
     fn select_node(node: rc::Rc<RefCell<MCTN>>) -> rc::Rc<RefCell<MCTN>> {
         let mut max_uct_child: Option<rc::Rc<RefCell<MCTN>>> = None;
         let mut max_uct = 0.0;
@@ -116,7 +117,7 @@ impl MCTN {
         cloned_game.get_state()
     }
 
-    // Starting form leaf node, refresh the state of wins/vists up the tree until root node is reached
+    /// Starting form leaf node, refresh the state of wins/vists up the tree until root node is reached
     fn backpropagate(node: rc::Rc<RefCell<MCTN>>, game_result: game::GameState) {
         let node_player = (*node).borrow().game.get_turn();
 
@@ -160,11 +161,11 @@ impl MCTN {
         }
     }
 
-    // Perform one round of an MCTS (Monte Carlo Tree Search) update. This includes:
-    // 1- selecting a leaf node starting from root according to UCT policy
-    // 2- expanding leaf node to include its children of possible new moves
-    // 3- simulating a random playout starting from each of the children
-    // 4- backpropagating game results of random playouts from each new children up to the root node
+    /// Perform one round of an MCTS (Monte Carlo Tree Search) update. This includes:
+    /// 1- selecting a leaf node starting from root according to UCT policy
+    /// 2- expanding leaf node to include its children of possible new moves
+    /// 3- simulating a random playout starting from each of the children
+    /// 4- backpropagating game results of random playouts from each new children up to the root node
     fn mcts_update(root: rc::Rc<RefCell<MCTN>>) {
         let leaf = MCTN::select_node(rc::Rc::clone(&root));
         MCTN::expand_node(rc::Rc::clone(&leaf));
@@ -175,6 +176,23 @@ impl MCTN {
             let game_result = MCTN::simulate_playout(rc::Rc::clone(&child));
             MCTN::backpropagate(rc::Rc::clone(&child), game_result);
         }
+    }
+
+    /// This function is supposed to be called after the tree has been expanded and explored
+    /// After exploration, it selects the move to get from parent to child with highest win rate
+    fn select_best_move(root: rc::Rc<Ref<MCTN>>) -> Option<(usize, usize)> {
+        let mut best_move: Option<(usize, usize)> = None;
+        let mut max_win_rate = 0.0;
+        for child in (*root).borrow().children.iter() {
+            let win_rate = (**child).borrow().wins / ((**child).borrow().visits);
+
+            if win_rate > max_win_rate {
+                max_win_rate = win_rate;
+                best_move = Some((**child).borrow().move_from_parent.unwrap());
+            }
+        }
+
+        best_move
     }
 }
 
