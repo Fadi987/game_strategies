@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 tic_tac_toe = { path = "../tic_tac_toe" }
+mcts = { path = "../mcts" }

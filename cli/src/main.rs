@@ -1,3 +1,4 @@
+use mcts::mcts_core;
 use std::io;
 use std::io::Write;
 use tic_tac_toe::board;
@@ -32,6 +33,19 @@ fn main() {
             game::GameTurn::TurnX => "X",
             game::GameTurn::TurnO => "O",
         };
+
+        if player == "X" {
+            let mut best_move = None;
+
+            while best_move.is_none() {
+                let mctn_root = mcts_core::MCTN::new(&game);
+                best_move = mcts_core::MCTN::think_about_best_move(mctn_root, 1000);
+            }
+
+            let (row_index, col_index) = best_move.unwrap();
+            game.play(row_index, col_index).unwrap();
+            continue;
+        }
 
         print!(
             "Select cell for player {} in format row_index, col_index: ",

@@ -12,7 +12,7 @@ use tic_tac_toe::game;
 /// - game move played in parent state to reach current node (None if parent is None)
 /// - number of wins
 /// - number of visits
-struct MCTN {
+pub struct MCTN {
     game: game::Game,
     parent: Option<rc::Weak<RefCell<MCTN>>>,
     children: Vec<rc::Rc<RefCell<MCTN>>>,
