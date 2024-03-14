@@ -31,6 +31,14 @@ impl Board {
         }
     }
 
+    /// Returns `Cell` at location (`row_index`, `col_index`), or an `Err` if location is out-of-bound
+    pub fn get_cell(&self, row_index: usize, col_index: usize) -> Result<Cell, &'static str> {
+        self.cells
+            .get(row_index)
+            .and_then(|r| r.get(col_index).copied())
+            .ok_or("Board index out of bound.")
+    }
+
     /// Marks the `Board` object with cell `Cell` at location (`row_index`, `col_index`). Returns an `Err` if:
     /// - location marked is out-of-bounds, or
     /// - the chosen cell is non-empty
@@ -54,14 +62,6 @@ impl Board {
             },
             None => Err(BoardMarkError::OutOfBound),
         }
-    }
-
-    /// Returns `Cell` at location (`row_index`, `col_index`), or an `Err` if location is out-of-bound
-    pub fn get_cell(&self, row_index: usize, col_index: usize) -> Result<Cell, &'static str> {
-        self.cells
-            .get(row_index)
-            .and_then(|r| r.get(col_index).copied())
-            .ok_or("Board index out of bound.")
     }
 }
 

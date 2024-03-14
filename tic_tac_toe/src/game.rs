@@ -57,47 +57,17 @@ impl Game {
         }
     }
 
-    /// Plays one turn of Tic-Tac-Toe as the current player by marking cell at location (`row_index`, `col_index`).
-    /// Returns an `Err` if:
-    /// - location is out-of-bounds, or
-    /// - cell played is non-empty, or
-    /// - game is terminated (not `Ongoing`)
-    pub fn play(&mut self, row_index: usize, col_index: usize) -> Result<(), GamePlayError> {
-        match self.state {
-            GameState::Ongoing => match self.turn {
-                GameTurn::TurnX => {
-                    if let Err(e) = self.board.mark(board::Cell::X, row_index, col_index) {
-                        return Err(GamePlayError::MarkError(e));
-                    }
-
-                    self.update_state();
-                    self.turn = GameTurn::TurnO;
-                    Ok(())
-                }
-                GameTurn::TurnO => {
-                    if let Err(e) = self.board.mark(board::Cell::O, row_index, col_index) {
-                        return Err(GamePlayError::MarkError(e));
-                    }
-
-                    self.update_state();
-                    self.turn = GameTurn::TurnX;
-                    Ok(())
-                }
-            },
-            _ => Err(GamePlayError::GameIsOver),
-        }
-    }
-
-    /// Returns a copy of the game state after the move (row_index, col_index) has been played
-    pub fn get_played(&self, row_index: usize, col_index: usize) -> Result<Self, GamePlayError> {
-        let mut cloned_game = (*self).clone();
-        cloned_game.play(row_index, col_index)?;
-        Ok(cloned_game)
-    }
-
     /// Gets the current state of the game
     pub fn get_state(&self) -> GameState {
         self.state
+    }
+
+    /// Returns a boolean indicating whether the game is over
+    pub fn is_over(&self) -> bool {
+        match self.state {
+            GameState::Ongoing => false,
+            _ => true,
+        }
     }
 
     /// Gets the turn of the current player
@@ -160,12 +130,42 @@ impl Game {
         }
     }
 
-    /// Returns a boolean indicating whether the game is over
-    pub fn is_over(&self) -> bool {
+    /// Plays one turn of Tic-Tac-Toe as the current player by marking cell at location (`row_index`, `col_index`).
+    /// Returns an `Err` if:
+    /// - location is out-of-bounds, or
+    /// - cell played is non-empty, or
+    /// - game is terminated (not `Ongoing`)
+    pub fn play(&mut self, row_index: usize, col_index: usize) -> Result<(), GamePlayError> {
         match self.state {
-            GameState::Ongoing => false,
-            _ => true,
+            GameState::Ongoing => match self.turn {
+                GameTurn::TurnX => {
+                    if let Err(e) = self.board.mark(board::Cell::X, row_index, col_index) {
+                        return Err(GamePlayError::MarkError(e));
+                    }
+
+                    self.update_state();
+                    self.turn = GameTurn::TurnO;
+                    Ok(())
+                }
+                GameTurn::TurnO => {
+                    if let Err(e) = self.board.mark(board::Cell::O, row_index, col_index) {
+                        return Err(GamePlayError::MarkError(e));
+                    }
+
+                    self.update_state();
+                    self.turn = GameTurn::TurnX;
+                    Ok(())
+                }
+            },
+            _ => Err(GamePlayError::GameIsOver),
         }
+    }
+
+    /// Returns a copy of the game state after the move (row_index, col_index) has been played
+    pub fn get_played(&self, row_index: usize, col_index: usize) -> Result<Self, GamePlayError> {
+        let mut cloned_game = (*self).clone();
+        cloned_game.play(row_index, col_index)?;
+        Ok(cloned_game)
     }
 
     // Returns a vector of possible move as (row_index, col_index).
