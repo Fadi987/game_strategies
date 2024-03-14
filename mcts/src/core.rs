@@ -162,6 +162,23 @@ impl MCTN {
             None => {}
         }
     }
+
+    // Perform one round of an MCTS (Monte Carlo Tree Search) update. This includes:
+    // 1- selecting a leaf node starting from root according to UCT policy
+    // 2- expanding leaf node to include its children of possible new moves
+    // 3- simulating a random playout starting from each of the children
+    // 4- backpropagating game results of random playouts from each new children up to the root node
+    fn mcts_update(root: rc::Rc<RefCell<MCTN>>) {
+        let leaf = MCTN::select_node(rc::Rc::clone(&root));
+        MCTN::expand_node(rc::Rc::clone(&leaf));
+
+        let children: Vec<rc::Rc<RefCell<MCTN>>> = (*leaf).borrow().children.clone();
+
+        for child in children {
+            let game_result = MCTN::simulate_playout(rc::Rc::clone(&child));
+            MCTN::backpropagate(rc::Rc::clone(&child), game_result);
+        }
+    }
 }
 
 #[cfg(test)]
