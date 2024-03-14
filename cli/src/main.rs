@@ -34,7 +34,7 @@ fn main() {
             game::GameTurn::TurnO => "O",
         };
 
-        if player == "X" {
+        if player == "O" {
             let mut best_move = None;
 
             while best_move.is_none() {
