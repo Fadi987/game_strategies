@@ -1,8 +1,7 @@
 //! Contains functionality for core MCTN (Monte Carlo Tree Search)
 
 use rand::Rng;
-use std::borrow::Borrow;
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::rc;
 use tic_tac_toe::game;
 
