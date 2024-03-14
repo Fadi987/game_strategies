@@ -12,7 +12,7 @@ use tic_tac_toe::game;
 /// - children which are the possible game states reachable from current state
 /// - parent which is the game state we reached current game state from
 struct MCTS {
-    game_state: game::Game,
+    game: game::Game,
     parent: Option<rc::Weak<RefCell<MCTS>>>,
     children: Vec<rc::Rc<RefCell<MCTS>>>,
     wins: f64,
@@ -23,7 +23,7 @@ impl MCTS {
     /// Returns a newly created MCTS node under a shared reference
     fn new() -> rc::Rc<RefCell<MCTS>> {
         rc::Rc::new(RefCell::new(MCTS {
-            game_state: game::Game::new(),
+            game: game::Game::new(),
             parent: None,
             children: Vec::new(),
             wins: 0.0,
@@ -63,10 +63,10 @@ impl MCTS {
         }
     }
 
-    /// Adds a child MCTS node to parent with game state `game_state`
-    fn add_child_with_state(parent: rc::Rc<RefCell<MCTS>>, game_state: game::Game) {
+    /// Adds a child MCTS node to parent with game state `game`
+    fn add_child_with_state(parent: rc::Rc<RefCell<MCTS>>, game: game::Game) {
         let child = rc::Rc::new(RefCell::new(MCTS {
-            game_state,
+            game,
             wins: 0.0,
             visits: 0.0,
             children: Vec::new(),
@@ -85,26 +85,26 @@ impl MCTS {
 
         let child_games: Vec<game::Game> = (*node)
             .borrow()
-            .game_state
+            .game
             .get_possible_plays()
             .iter()
             .map(|&(row_index, col_index)| {
                 (*node)
                     .borrow()
-                    .game_state
+                    .game
                     .get_played(row_index, col_index)
                     .unwrap()
             })
             .collect();
 
-        for game_state in child_games {
-            MCTS::add_child_with_state(rc::Rc::clone(&node), game_state);
+        for game in child_games {
+            MCTS::add_child_with_state(rc::Rc::clone(&node), game);
         }
     }
 
     /// Simulate a random play starting from game state in `node` until game is over
     fn simulate_playout(node: rc::Rc<RefCell<MCTS>>) -> game::GameState {
-        let mut cloned_game = (*node).borrow().game_state.clone();
+        let mut cloned_game = (*node).borrow().game.clone();
         let mut rng = rand::thread_rng();
 
         while !cloned_game.is_over() {
@@ -121,7 +121,7 @@ impl MCTS {
 
     // Starting form leaf node, refresh the state of wins/vists up the tree until root node is reached
     fn backpropagate(node: rc::Rc<RefCell<MCTS>>, game_result: game::GameState) {
-        let node_player = (*node).borrow().game_state.get_turn();
+        let node_player = (*node).borrow().game.get_turn();
 
         match game_result {
             game::GameState::XWon => match node_player {
@@ -178,19 +178,13 @@ mod tests {
 
         for node in (*root).borrow().children.iter() {
             // Assert move has been made
-            assert_eq!((**node).borrow().game_state.get_possible_plays().len(), 8);
+            assert_eq!((**node).borrow().game.get_possible_plays().len(), 8);
 
             // Assert game is not over (Tic-Tac-Toe cannot end in one move)
-            assert_eq!(
-                (**node).borrow().game_state.get_state(),
-                game::GameState::Ongoing
-            );
+            assert_eq!((**node).borrow().game.get_state(), game::GameState::Ongoing);
 
             // Assert turn has been switched
-            assert_eq!(
-                (**node).borrow().game_state.get_turn(),
-                game::GameTurn::TurnO
-            );
+            assert_eq!((**node).borrow().game.get_turn(), game::GameTurn::TurnO);
         }
 
         use std::collections;
@@ -198,7 +192,7 @@ mod tests {
             .borrow()
             .children
             .iter()
-            .map(|node| (**node).borrow().game_state.clone())
+            .map(|node| (**node).borrow().game.clone())
             .collect();
 
         // Make sure the child game states (the boards in this case) are unique/different
@@ -208,7 +202,7 @@ mod tests {
     #[test]
     fn test_select_node() {
         let root = MCTS::new();
-        let root_game = (*root).borrow().game_state.clone();
+        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a first possibility child
         let game_1_after_move_1 = root_game.get_played(0, 0).unwrap();
@@ -232,7 +226,7 @@ mod tests {
 
         // Make sure we select the child with high UCT
         assert_eq!(
-            (*selected_child).borrow().game_state == (*a_child).borrow().game_state,
+            (*selected_child).borrow().game == (*a_child).borrow().game,
             true
         );
     }
@@ -241,7 +235,7 @@ mod tests {
     fn test_backpropagate_xwon() {
         // Start with new game (empty board)
         let root = MCTS::new();
-        let root_game = (*root).borrow().game_state.clone();
+        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
         let game_after_move_1 = root_game.get_played(0, 0).unwrap();
@@ -266,7 +260,7 @@ mod tests {
     fn test_backpropagate_owon() {
         // Start with new game (empty board)
         let root = MCTS::new();
-        let root_game = (*root).borrow().game_state.clone();
+        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
         let game_after_move_1 = root_game.get_played(0, 0).unwrap();
@@ -291,7 +285,7 @@ mod tests {
     fn test_backpropagate_tie() {
         // Start with new game (empty board)
         let root = MCTS::new();
-        let root_game = (*root).borrow().game_state.clone();
+        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
         let game_after_move_1 = root_game.get_played(0, 0).unwrap();
@@ -316,7 +310,7 @@ mod tests {
     fn test_backpropagate_2_levels() {
         // Start with new game (empty board)
         let root = MCTS::new();
-        let root_game = (*root).borrow().game_state.clone();
+        let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
         let game_after_move_1 = root_game.get_played(0, 0).unwrap();
@@ -325,7 +319,7 @@ mod tests {
         assert_eq!((*root).borrow().children.len(), 1);
 
         let child_level_1 = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
-        let game_level_1 = (*child_level_1).borrow().game_state.clone();
+        let game_level_1 = (*child_level_1).borrow().game.clone();
 
         // O at (1, 1) added as a child second level
         let game_after_move_2 = game_level_1.get_played(1, 1).unwrap();
