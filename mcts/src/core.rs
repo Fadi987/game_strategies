@@ -180,7 +180,7 @@ impl MCTN {
 
     /// This function is supposed to be called after the tree has been expanded and explored
     /// After exploration, it selects the move to get from parent to child with highest win rate
-    fn select_best_move(root: rc::Rc<Ref<MCTN>>) -> Option<(usize, usize)> {
+    fn select_best_move(root: rc::Rc<RefCell<MCTN>>) -> Option<(usize, usize)> {
         let mut best_move: Option<(usize, usize)> = None;
         let mut max_win_rate = 0.0;
         for child in (*root).borrow().children.iter() {
@@ -193,6 +193,18 @@ impl MCTN {
         }
 
         best_move
+    }
+
+    /// Performes `iterations` iterations of MCTS algorithm and responds with best move
+    pub fn think_about_best_move(
+        root: rc::Rc<RefCell<MCTN>>,
+        iterations: u32,
+    ) -> Option<(usize, usize)> {
+        for _ in 0..iterations {
+            MCTN::mcts_update(rc::Rc::clone(&root));
+        }
+
+        MCTN::select_best_move(rc::Rc::clone(&root))
     }
 }
 
