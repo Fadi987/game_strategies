@@ -20,10 +20,10 @@ struct MCTN {
 }
 
 impl MCTN {
-    /// Returns a newly created MCTN (Monte Carlo Tree Node) under a shared reference
-    fn new() -> rc::Rc<RefCell<MCTN>> {
+    /// Returns a newly created MCTN (Monte Carlo Tree Node) starting from `game_state` under a shared pointer
+    pub fn new(game_state: &game::Game) -> rc::Rc<RefCell<MCTN>> {
         rc::Rc::new(RefCell::new(MCTN {
-            game: game::Game::new(),
+            game: game_state.clone(),
             parent: None,
             children: Vec::new(),
             wins: 0.0,
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_expand_node() {
-        let root = MCTN::new();
+        let root = MCTN::new(&game::Game::new());
         MCTN::expand_node(rc::Rc::clone(&root));
 
         // Check number of children is correct (first move has 9 possible choices)
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_select_node() {
-        let root = MCTN::new();
+        let root = MCTN::new(&game::Game::new());
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a first possibility child
@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn test_backpropagate_xwon() {
         // Start with new game (empty board)
-        let root = MCTN::new();
+        let root = MCTN::new(&game::Game::new());
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
@@ -259,7 +259,7 @@ mod tests {
     #[test]
     fn test_backpropagate_owon() {
         // Start with new game (empty board)
-        let root = MCTN::new();
+        let root = MCTN::new(&game::Game::new());
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn test_backpropagate_tie() {
         // Start with new game (empty board)
-        let root = MCTN::new();
+        let root = MCTN::new(&game::Game::new());
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
@@ -309,7 +309,7 @@ mod tests {
     #[test]
     fn test_backpropagate_2_levels() {
         // Start with new game (empty board)
-        let root = MCTN::new();
+        let root = MCTN::new(&game::Game::new());
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
