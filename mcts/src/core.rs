@@ -7,14 +7,17 @@ use tic_tac_toe::game;
 
 /// Represents a node in the Monte Carlo tree. Includes
 /// - game state
+/// - parent which is the game state we reached current game state from
+/// - children which are the possible game states reachable from current state
+/// - game move played in parent state to reach current node (None if parent is None)
 /// - number of wins
 /// - number of visits
-/// - children which are the possible game states reachable from current state
-/// - parent which is the game state we reached current game state from
+
 struct MCTN {
     game: game::Game,
     parent: Option<rc::Weak<RefCell<MCTN>>>,
     children: Vec<rc::Rc<RefCell<MCTN>>>,
+    move_from_parent: Option<(usize, usize)>,
     wins: f64,
     visits: f64,
 }
@@ -25,6 +28,7 @@ impl MCTN {
         rc::Rc::new(RefCell::new(MCTN {
             game: game_state.clone(),
             parent: None,
+            move_from_parent: None,
             children: Vec::new(),
             wins: 0.0,
             visits: 0.0,
@@ -63,13 +67,19 @@ impl MCTN {
         }
     }
 
-    /// Adds a child MCTN to parent with game state `game`
-    fn add_child_with_state(parent: rc::Rc<RefCell<MCTN>>, game: game::Game) {
+    /// Starting from the parent game, plays a move (`play_row_index`, `play_col_index`), and adds
+    /// the new game state as a child
+    fn play(parent: rc::Rc<RefCell<MCTN>>, play_row_index: usize, play_col_index: usize) {
         let child = rc::Rc::new(RefCell::new(MCTN {
-            game,
+            game: (*parent)
+                .borrow()
+                .game
+                .get_played(play_row_index, play_col_index)
+                .unwrap(),
             wins: 0.0,
             visits: 0.0,
             children: Vec::new(),
+            move_from_parent: Some((play_row_index, play_col_index)),
             parent: Some(rc::Rc::downgrade(&parent)),
         }));
 
@@ -83,22 +93,10 @@ impl MCTN {
             panic!("Cannot expand a non-leaf node!");
         }
 
-        let child_games: Vec<game::Game> = (*node)
-            .borrow()
-            .game
-            .get_possible_plays()
-            .iter()
-            .map(|&(row_index, col_index)| {
-                (*node)
-                    .borrow()
-                    .game
-                    .get_played(row_index, col_index)
-                    .unwrap()
-            })
-            .collect();
+        let possible_plays = (*node).borrow().game.get_possible_plays();
 
-        for game in child_games {
-            MCTN::add_child_with_state(rc::Rc::clone(&node), game);
+        for (play_row_index, play_col_index) in possible_plays {
+            MCTN::play(rc::Rc::clone(&node), play_row_index, play_col_index);
         }
     }
 
@@ -222,12 +220,10 @@ mod tests {
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a first possibility child
-        let game_1_after_move_1 = root_game.get_played(0, 0).unwrap();
-        MCTN::add_child_with_state(rc::Rc::clone(&root), game_1_after_move_1);
+        MCTN::play(rc::Rc::clone(&root), 0, 0);
 
         // X at (2, 2) added as a second possibility child
-        let game_2_after_move_1 = root_game.get_played(2, 2).unwrap();
-        MCTN::add_child_with_state(rc::Rc::clone(&root), game_2_after_move_1);
+        MCTN::play(rc::Rc::clone(&root), 2, 2);
 
         // At this point, we have a root node with two children at level 1
 
@@ -255,8 +251,7 @@ mod tests {
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
-        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
-        MCTN::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+        MCTN::play(rc::Rc::clone(&root), 0, 0);
 
         assert_eq!((*root).borrow().children.len(), 1);
         let child = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
@@ -281,7 +276,7 @@ mod tests {
 
         // X at (0, 0) added as a child
         let game_after_move_1 = root_game.get_played(0, 0).unwrap();
-        MCTN::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+        MCTN::play(rc::Rc::clone(&root), 0, 0);
 
         assert_eq!((*root).borrow().children.len(), 1);
         let child = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
@@ -305,8 +300,7 @@ mod tests {
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
-        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
-        MCTN::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+        MCTN::play(rc::Rc::clone(&root), 0, 0);
 
         assert_eq!((*root).borrow().children.len(), 1);
         let child = rc::Rc::clone((*root).borrow().children.iter().next().unwrap());
@@ -330,8 +324,7 @@ mod tests {
         let root_game = (*root).borrow().game.clone();
 
         // X at (0, 0) added as a child
-        let game_after_move_1 = root_game.get_played(0, 0).unwrap();
-        MCTN::add_child_with_state(rc::Rc::clone(&root), game_after_move_1);
+        MCTN::play(rc::Rc::clone(&root), 0, 0);
 
         assert_eq!((*root).borrow().children.len(), 1);
 
@@ -339,8 +332,7 @@ mod tests {
         let game_level_1 = (*child_level_1).borrow().game.clone();
 
         // O at (1, 1) added as a child second level
-        let game_after_move_2 = game_level_1.get_played(1, 1).unwrap();
-        MCTN::add_child_with_state(rc::Rc::clone(&child_level_1), game_after_move_2);
+        MCTN::play(rc::Rc::clone(&child_level_1), 1, 1);
 
         assert_eq!((*child_level_1).borrow().children.len(), 1);
 
