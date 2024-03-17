@@ -6,13 +6,20 @@ This project is an implementation of a tic-tac-toe game agent that uses Monte Ca
 <ol>
   <li>solidify my Rust knowledge which I learned a month prior to starting this project</li>
   <li>learn about MCTS</li>
-</ol> 
+</ol>
 
 <h2>Features</h2>
 
 <ul>
-  <li>MCTS Algorithm: Employs Monte Carlo Search Trees for robust and efficient game decision-making.</li>
-  <li>Rust Implementation: Built with Rust for potential of efficient memory management and performance.</li>
-  <li>Interactive Game: Allows users to play against the AI in a simple terminal interface.</li>
-</ul> 
+  <li><b>MCTS Algorithm:</b> Employs Monte Carlo Search Trees for robust and efficient game decision-making.</li>
+  <li><b>Rust Implementation:</b> Built with Rust for potential of efficient memory management and performance.</li>
+  <li><b>Interactive Game:</b> Allows users to play against the AI in a simple terminal interface.</li>
+</ul>
 
+<h2>Getting Started</h2>
+<h3>Prerequisites<h3>
+Ensure you have Rust installed on your system. You can install Rust via <a href="https://rustup.rs">rustup</a>.
+
+<h3>Installation</h3>
+Clone the repository:
+```git clone git@github.com:Fadi987/game_strategies.git```
