@@ -17,7 +17,7 @@ This project is an implementation of a tic-tac-toe game agent that uses Monte Ca
 </ul>
 
 <h2>Getting Started</h2>
-<h3>Prerequisites<h3>
+<h3>Prerequisites</h3>
 Ensure you have Rust installed on your system. You can install Rust via <a href="https://rustup.rs">rustup</a>.
 
 <h3>Installation</h3>
@@ -53,7 +53,7 @@ cargo doc --open
 
 <h3>How To Play</h3>
 
-You'll be playing as O against the AI agent, which will be X. At every turn for O, you can specify the cell in the 3x3 board to mark by `(row_index, col_index)`, where `(0,0)` is the top left cell and `(2,2)` is the bottom right.
+You'll be playing as X against the AI agent, which will be O. At every turn for X, you can specify the cell in the 3x3 board to mark by `(row_index, col_index)`, where `(0,0)` is the top left cell and `(2,2)` is the bottom right.
 
 <h3>How It Works</h3>
 The MCTS algorithm is a heuristic search algorithm used for making decisions in a given domain by taking random samples in the decision space and building a search tree according to the results. This approach is particularly well-suited for games like tic-tac-toe, where a finite and discrete set of moves exists.
