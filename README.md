@@ -43,7 +43,6 @@ Run the game:
 
 ```
 cargo run
-
 ```
 
 (Optional) Generate the docs:
@@ -66,7 +65,7 @@ At any given iteration, we keep track of a search tree in-memory where every nod
 MCTS consists of four main phases in each iteration:
 <br></br>
 <ol>
-<li><b>Selection:</b> Starting from the root node, the algorithm selects child nodes one-by-one until it reaches a leaf node. The selection is based on the Upper Confidence Bound (UCB) plicy applied to trees, which balances exploration and exploitation.</li>
+<li><b>Selection:</b> Starting from the root node, the algorithm selects child nodes depth-first until it reaches a leaf node. The selection is based on the Upper Confidence Bound (UCB) policy applied to trees, which balances exploration and exploitation.</li>
 
 <li><b>Expansion:</b> Unless the leaf node ends the game (win/lose/draw), we add all child nodes to expand the search tree, based on the possible moves from the game state of the previously-leaf node.</li>
 
